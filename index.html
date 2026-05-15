@@ -1,0 +1,423 @@
+# einkaufszettel<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Einkaufszettel</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f6f7fb, #e9eef7);
+      color: #111827;
+    }
+
+    .app {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 32px;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    .muted {
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid #d1d5db;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 13px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #111827;
+      color: white;
+    }
+
+    button.secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    button.danger {
+      background: #ef4444;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .row button {
+      white-space: nowrap;
+    }
+
+    .item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 16px;
+      background: #f9fafb;
+      margin-bottom: 10px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .item.checked {
+      background: #dcfce7;
+      border-color: #86efac;
+    }
+
+    .item-title {
+      font-weight: 700;
+    }
+
+    .item-meta {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 3px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .tabs button {
+      flex: 1;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .empty {
+      text-align: center;
+      color: #6b7280;
+      padding: 25px 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="card">
+      <h1>🛒 Einkaufszettel</h1>
+      <div class="muted">Familienliste mit gemeinsamem Backlog</div>
+    </div>
+
+    <div id="authBox" class="card">
+      <h2>Anmelden</h2>
+      <input id="email" type="email" placeholder="E-Mail" />
+      <input id="password" type="password" placeholder="Passwort" />
+
+      <div class="row">
+        <button onclick="login()">Einloggen</button>
+        <button class="secondary" onclick="register()">Registrieren</button>
+      </div>
+    </div>
+
+    <div id="mainApp" class="hidden">
+      <div class="card">
+        <div class="row">
+          <input id="newItem" placeholder="Artikel hinzufügen, z.B. Milch" />
+          <button onclick="addItem()">+</button>
+        </div>
+
+        <button class="secondary" onclick="logout()">Abmelden</button>
+      </div>
+
+      <div class="card">
+        <div class="tabs">
+          <button onclick="showTab('list')">Einkaufsliste</button>
+          <button class="secondary" onclick="showTab('bought')">Eingekauft</button>
+        </div>
+
+        <div id="listTab">
+          <h2>Offene Artikel</h2>
+          <div id="shoppingList"></div>
+        </div>
+
+        <div id="boughtTab" class="hidden">
+          <h2>Eingekauft</h2>
+          <div class="muted">Hier sieht man, wer was zuletzt gekauft hat.</div>
+          <br />
+          <div id="boughtList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://gromokgqugxopbfokhth.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_ABmh32TTwpVufI-G2H97dg_Ixai_2B2";
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+
+    async function init() {
+      const { data } = await supabase.auth.getSession();
+      currentUser = data.session?.user || null;
+
+      if (currentUser) {
+        document.getElementById("authBox").classList.add("hidden");
+        document.getElementById("mainApp").classList.remove("hidden");
+        loadItems();
+      }
+
+      supabase
+        .channel("shopping_items_changes")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "shopping_items" },
+          () => loadItems()
+        )
+        .subscribe();
+
+      setInterval(moveOldCheckedItems, 60 * 1000);
+    }
+
+    async function register() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      const { error } = await supabase.auth.signUp({ email, password });
+
+      if (error) {
+        alert(error.message);
+      } else {
+        alert("Registrierung erfolgreich. Prüfe ggf. deine E-Mails.");
+      }
+    }
+
+    async function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      currentUser = data.user;
+      document.getElementById("authBox").classList.add("hidden");
+      document.getElementById("mainApp").classList.remove("hidden");
+
+      loadItems();
+    }
+
+    async function logout() {
+      await supabase.auth.signOut();
+      location.reload();
+    }
+
+    async function addItem() {
+      const input = document.getElementById("newItem");
+      const name = input.value.trim();
+
+      if (!name) return;
+
+      const { error } = await supabase.from("shopping_items").insert({
+        name,
+        status: "open",
+        added_by: currentUser.email
+      });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      input.value = "";
+      loadItems();
+    }
+
+    async function checkItem(id) {
+      const { error } = await supabase
+        .from("shopping_items")
+        .update({
+          status: "checked",
+          checked_at: new Date().toISOString(),
+          bought_by: currentUser.email
+        })
+        .eq("id", id);
+
+      if (error) alert(error.message);
+      loadItems();
+    }
+
+    async function uncheckItem(id) {
+      const { error } = await supabase
+        .from("shopping_items")
+        .update({
+          status: "open",
+          checked_at: null,
+          bought_by: null
+        })
+        .eq("id", id);
+
+      if (error) alert(error.message);
+      loadItems();
+    }
+
+    async function moveOldCheckedItems() {
+      const twentyMinutesAgo = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+
+      await supabase
+        .from("shopping_items")
+        .update({ status: "bought" })
+        .eq("status", "checked")
+        .lt("checked_at", twentyMinutesAgo);
+
+      loadItems();
+    }
+
+    async function loadItems() {
+      await moveOldCheckedItemsWithoutReload();
+
+      const { data, error } = await supabase
+        .from("shopping_items")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      renderShoppingList(data.filter(item => item.status !== "bought"));
+      renderBoughtList(data.filter(item => item.status === "bought"));
+    }
+
+    async function moveOldCheckedItemsWithoutReload() {
+      const twentyMinutesAgo = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+
+      await supabase
+        .from("shopping_items")
+        .update({ status: "bought" })
+        .eq("status", "checked")
+        .lt("checked_at", twentyMinutesAgo);
+    }
+
+    function renderShoppingList(items) {
+      const box = document.getElementById("shoppingList");
+      box.innerHTML = "";
+
+      if (items.length === 0) {
+        box.innerHTML = `<div class="empty">Keine offenen Artikel</div>`;
+        return;
+      }
+
+      items.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "item" + (item.status === "checked" ? " checked" : "");
+
+        div.innerHTML = `
+          <div>
+            <div class="item-title">${escapeHtml(item.name)}</div>
+            <div class="item-meta">
+              Hinzugefügt von ${item.added_by || "Unbekannt"}
+              ${item.status === "checked" ? `<br>Gerade gekauft von ${item.bought_by}` : ""}
+            </div>
+          </div>
+
+          ${
+            item.status === "checked"
+              ? `<button class="secondary" onclick="uncheckItem('${item.id}')">Zurück</button>`
+              : `<button onclick="checkItem('${item.id}')">Abhaken</button>`
+          }
+        `;
+
+        box.appendChild(div);
+      });
+    }
+
+    function renderBoughtList(items) {
+      const box = document.getElementById("boughtList");
+      box.innerHTML = "";
+
+      if (items.length === 0) {
+        box.innerHTML = `<div class="empty">Noch nichts eingekauft</div>`;
+        return;
+      }
+
+      items.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "item";
+
+        div.innerHTML = `
+          <div>
+            <div class="item-title">${escapeHtml(item.name)}</div>
+            <div class="item-meta">
+              Gekauft von ${item.bought_by || "Unbekannt"}<br>
+              ${formatDate(item.checked_at)}
+            </div>
+          </div>
+        `;
+
+        box.appendChild(div);
+      });
+    }
+
+    function showTab(tab) {
+      document.getElementById("listTab").classList.toggle("hidden", tab !== "list");
+      document.getElementById("boughtTab").classList.toggle("hidden", tab !== "bought");
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return "";
+      return new Date(dateString).toLocaleString("de-DE");
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    init();
+  </script>
+</body>
+</html>
