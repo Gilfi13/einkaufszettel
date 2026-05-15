@@ -13,7 +13,7 @@
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(160deg, #eaf3ff, #f8fbff);
+      background: linear-gradient(160deg, #dbeafe, #f8fbff);
       color: #0f172a;
     }
 
@@ -25,32 +25,42 @@
     }
 
     .card {
-      background: rgba(255,255,255,0.9);
-      border-radius: 24px;
-      padding: 20px;
-      box-shadow: 0 20px 45px rgba(37, 99, 235, 0.12);
+      background: rgba(255,255,255,0.92);
+      border-radius: 26px;
+      padding: 22px;
+      box-shadow: 0 22px 50px rgba(37, 99, 235, 0.14);
       margin-bottom: 16px;
-      border: 1px solid rgba(147, 197, 253, 0.35);
+      border: 1px solid rgba(147, 197, 253, 0.45);
     }
 
-    h1, h2 {
-      margin-top: 0;
-      color: #1d4ed8;
+    .logo {
+      width: 72px;
+      height: 72px;
+      margin-bottom: 14px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 16px 35px rgba(37, 99, 235, 0.25);
+    }
+
+    .logo svg {
+      width: 42px;
+      height: 42px;
+      color: white;
     }
 
     h1 {
+      margin: 0 0 18px;
       font-size: 30px;
-      margin-bottom: 4px;
-    }
-
-    h2 {
-      font-size: 22px;
+      color: #1d4ed8;
     }
 
     input {
       width: 100%;
       padding: 15px;
-      border-radius: 16px;
+      border-radius: 17px;
       border: 1px solid #bfdbfe;
       font-size: 16px;
       margin-bottom: 10px;
@@ -60,24 +70,40 @@
 
     input:focus {
       border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
     }
 
     button {
       border: none;
-      border-radius: 16px;
-      padding: 14px 16px;
+      border-radius: 17px;
+      padding: 15px 16px;
       font-size: 15px;
       font-weight: 800;
       cursor: pointer;
       background: #2563eb;
       color: white;
       width: 100%;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+      box-shadow: 0 10px 22px rgba(37, 99, 235, 0.22);
+    }
+
+    button:active {
+      transform: scale(0.94);
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.18);
+    }
+
+    button:hover {
+      background: #1d4ed8;
     }
 
     button.secondary {
       background: #dbeafe;
       color: #1e40af;
+      box-shadow: none;
+    }
+
+    button.secondary:hover {
+      background: #bfdbfe;
     }
 
     .row {
@@ -91,10 +117,22 @@
       justify-content: space-between;
       gap: 12px;
       padding: 14px;
-      border-radius: 18px;
+      border-radius: 19px;
       background: #f8fbff;
       margin-bottom: 10px;
       border: 1px solid #dbeafe;
+      animation: popIn 0.22s ease;
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
     .item.checked {
@@ -103,7 +141,7 @@
     }
 
     .item-title {
-      font-weight: 800;
+      font-weight: 850;
     }
 
     .item-meta {
@@ -129,6 +167,12 @@
     .logout {
       margin-top: 10px;
     }
+
+    .small-btn {
+      width: 88px;
+      padding: 13px 10px;
+      border-radius: 15px;
+    }
   </style>
 </head>
 
@@ -136,7 +180,17 @@
   <div class="app">
 
     <div id="authBox" class="card">
-      <h1>Einloggen</h1>
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3h8l2 2v16H6V5l2-2z"/>
+          <path d="M9 8h6"/>
+          <path d="M9 12h6"/>
+          <path d="M9 16h4"/>
+          <path d="M16 3v3h3"/>
+        </svg>
+      </div>
+
+      <h1>Einkaufszettel</h1>
 
       <input id="email" type="email" placeholder="E-Mail" />
       <input id="password" type="password" placeholder="Passwort" />
@@ -148,11 +202,21 @@
 
     <div id="mainApp" class="hidden">
       <div class="card">
+        <div class="logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3h8l2 2v16H6V5l2-2z"/>
+            <path d="M9 8h6"/>
+            <path d="M9 12h6"/>
+            <path d="M9 16h4"/>
+            <path d="M16 3v3h3"/>
+          </svg>
+        </div>
+
         <h1>Einkauf</h1>
 
         <div class="row">
           <input id="newItem" placeholder="z.B. Milch" />
-          <button onclick="addItem()" style="width:70px;">+</button>
+          <button onclick="addItem()" class="small-btn">+</button>
         </div>
 
         <button class="secondary logout" onclick="logout()">Abmelden</button>
@@ -176,8 +240,8 @@
   </div>
 
   <script>
-    const SUPABASE_URL = "https://gromokgqugxopbfokhth.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_ABmh32TTwpVufI-G2H97dg_Ixai_2B2";
+    const SUPABASE_URL = "DEINE_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = "DEIN_SUPABASE_ANON_KEY";
 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -214,13 +278,17 @@
         return;
       }
 
-      const { error } = await supabaseClient.auth.signUp({ email, password });
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password
+      });
 
       if (error) {
         alert(error.message);
-      } else {
-        alert("Registriert. Du kannst dich jetzt einloggen.");
+        return;
       }
+
+      alert("Registriert. Falls E-Mail-Bestätigung aktiv ist, bitte Mail bestätigen.");
     }
 
     async function login() {
@@ -350,8 +418,8 @@
 
           ${
             item.status === "checked"
-              ? `<button class="secondary" onclick="uncheckItem('${item.id}')" style="width:90px;">Zurück</button>`
-              : `<button onclick="checkItem('${item.id}')" style="width:90px;">✓</button>`
+              ? `<button class="secondary small-btn" onclick="uncheckItem('${item.id}')">Zurück</button>`
+              : `<button class="small-btn" onclick="checkItem('${item.id}')">✓</button>`
           }
         `;
 
