@@ -23,21 +23,6 @@
       padding: 18px;
     }
 
-    .topbar {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 10px;
-    }
-
-    .logout-btn {
-      width: auto;
-      padding: 9px 13px;
-      font-size: 13px;
-      background: #ef4444;
-      border-radius: 999px;
-      box-shadow: 0 8px 18px rgba(239, 68, 68, 0.22);
-    }
-
     .card {
       background: rgba(255,255,255,0.94);
       border-radius: 26px;
@@ -45,6 +30,34 @@
       box-shadow: 0 22px 50px rgba(37, 99, 235, 0.14);
       margin-bottom: 16px;
       border: 1px solid rgba(147, 197, 253, 0.45);
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .settings-btn {
+      width: 46px;
+      height: 46px;
+      padding: 0;
+      border-radius: 15px;
+      font-size: 22px;
+      background: #dbeafe;
+      color: #1e40af;
+      box-shadow: none;
+      flex-shrink: 0;
+    }
+
+    .logout-btn {
+      width: auto;
+      padding: 11px 15px;
+      font-size: 14px;
+      background: #ef4444;
+      border-radius: 999px;
+      box-shadow: 0 8px 18px rgba(239, 68, 68, 0.22);
     }
 
     .logo {
@@ -89,15 +102,20 @@
       border-radius: 17px;
       border: 1px solid #bfdbfe;
       font-size: 16px;
-      margin-bottom: 10px;
       outline: none;
       background: #f8fbff;
       font-family: inherit;
     }
 
+    input {
+      margin-bottom: 10px;
+    }
+
     textarea {
-      min-height: 80px;
+      min-height: 78px;
       resize: vertical;
+      margin-top: 12px;
+      margin-bottom: 12px;
     }
 
     input:focus, textarea:focus {
@@ -229,6 +247,10 @@
       color: #1e40af;
       cursor: pointer;
     }
+
+    .settings-list button {
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 
@@ -283,37 +305,33 @@
       <input id="joinInstanceName" placeholder="Name der Liste" />
       <input id="joinInstancePassword" type="password" placeholder="Passwort" />
       <button class="secondary" onclick="joinInstance()">Beitreten</button>
-
-      <br><br>
-      <button class="logout-btn" onclick="logout()">Abmelden</button>
     </div>
 
     <div id="mainApp" class="hidden">
-      <div class="topbar">
-        <button class="logout-btn" onclick="logout()">Abmelden</button>
-      </div>
-
       <div class="card">
-        <div class="logo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M8 3h8l2 2v16H6V5l2-2z"/>
-            <path d="M9 8h6"/>
-            <path d="M9 12h6"/>
-            <path d="M9 16h4"/>
-            <path d="M16 3v3h3"/>
-          </svg>
-        </div>
+        <div class="header-row">
+          <div>
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 3h8l2 2v16H6V5l2-2z"/>
+                <path d="M9 8h6"/>
+                <path d="M9 12h6"/>
+                <path d="M9 16h4"/>
+                <path d="M16 3v3h3"/>
+              </svg>
+            </div>
+            <h1 id="appTitle">Einkauf</h1>
+          </div>
 
-        <h1 id="appTitle">Einkauf</h1>
+          <button class="settings-btn" onclick="showSettings()">⚙</button>
+        </div>
 
         <div class="row">
           <input id="newItem" class="add-input" placeholder="z.B. Milch" />
           <button onclick="addItem()" class="add-btn">+</button>
         </div>
 
-        <textarea id="newComment" placeholder="Kommentar optional, z.B. 2 Packungen oder bestimmte Marke"></textarea>
-
-        <button class="secondary" onclick="leaveInstanceView()">Liste wechseln</button>
+        <textarea id="newComment" placeholder="Kommentar hinzufügen"></textarea>
       </div>
 
       <div class="card">
@@ -331,6 +349,27 @@
         </div>
       </div>
     </div>
+
+    <div id="settingsBox" class="card hidden">
+      <h1>Einstellungen</h1>
+      <div class="muted" id="settingsInfo"></div>
+
+      <div class="settings-list">
+        <button class="secondary" onclick="backToApp()">Zurück</button>
+        <button onclick="showNicknameEdit()">Nickname ändern</button>
+        <button onclick="leaveInstanceView()">Liste wechseln</button>
+        <button class="logout-btn" onclick="logout()">Abmelden</button>
+      </div>
+    </div>
+
+    <div id="nicknameEditBox" class="card hidden">
+      <h1>Nickname ändern</h1>
+      <input id="nicknameEditInput" placeholder="Neuer Nickname" />
+      <button onclick="updateNicknameFromSettings()">Speichern</button>
+      <br><br>
+      <button class="secondary" onclick="showSettings()">Zurück</button>
+    </div>
+
   </div>
 
   <script>
@@ -381,7 +420,7 @@
     }
 
     function showOnly(id) {
-      ["authBox", "profileBox", "instanceBox", "mainApp"].forEach(box => {
+      ["authBox", "profileBox", "instanceBox", "mainApp", "settingsBox", "nicknameEditBox"].forEach(box => {
         document.getElementById(box).classList.add("hidden");
       });
       document.getElementById(id).classList.remove("hidden");
@@ -489,6 +528,45 @@
       currentProfile = data;
       showOnly("instanceBox");
       loadMyInstances();
+    }
+
+    function showSettings() {
+      document.getElementById("settingsInfo").textContent =
+        `Angemeldet als ${currentProfile?.nickname || "Unbekannt"} · Liste: ${currentInstanceName || "Keine"}`;
+      showOnly("settingsBox");
+    }
+
+    function backToApp() {
+      showMainApp();
+    }
+
+    function showNicknameEdit() {
+      document.getElementById("nicknameEditInput").value = currentProfile?.nickname || "";
+      showOnly("nicknameEditBox");
+    }
+
+    async function updateNicknameFromSettings() {
+      const nickname = document.getElementById("nicknameEditInput").value.trim();
+
+      if (!nickname) {
+        alert("Bitte gib einen Namen ein.");
+        return;
+      }
+
+      const { data, error } = await supabaseClient
+        .from("profiles")
+        .update({ nickname })
+        .eq("id", currentUser.id)
+        .select()
+        .single();
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      currentProfile = data;
+      showSettings();
     }
 
     async function loadMyInstances() {
