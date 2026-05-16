@@ -21,6 +21,7 @@
       min-height: 100vh;
       margin: 0 auto;
       padding: 18px;
+      padding-bottom: 98px;
     }
 
     .card {
@@ -32,11 +33,39 @@
       border: 1px solid rgba(147, 197, 253, 0.45);
     }
 
-    .header-row {
+    .main-header {
+      display: grid;
+      grid-template-columns: 58px 1fr 46px;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .logo {
+      width: 58px;
+      height: 58px;
+      border-radius: 19px;
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 14px;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 16px 35px rgba(37, 99, 235, 0.25);
+    }
+
+    .logo svg {
+      width: 34px;
+      height: 34px;
+      color: white;
+    }
+
+    .instance-title {
+      font-size: 24px;
+      font-weight: 900;
+      color: #1d4ed8;
+      line-height: 1.1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .settings-btn {
@@ -49,33 +78,6 @@
       color: #1e40af;
       box-shadow: none;
       flex-shrink: 0;
-    }
-
-    .logout-btn {
-      width: auto;
-      padding: 11px 15px;
-      font-size: 14px;
-      background: #ef4444;
-      border-radius: 999px;
-      box-shadow: 0 8px 18px rgba(239, 68, 68, 0.22);
-    }
-
-    .logo {
-      width: 72px;
-      height: 72px;
-      margin-bottom: 14px;
-      border-radius: 22px;
-      background: linear-gradient(135deg, #2563eb, #60a5fa);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 16px 35px rgba(37, 99, 235, 0.25);
-    }
-
-    .logo svg {
-      width: 42px;
-      height: 42px;
-      color: white;
     }
 
     h1 {
@@ -112,10 +114,11 @@
     }
 
     textarea {
-      min-height: 78px;
+      min-height: 68px;
       resize: vertical;
-      margin-top: 12px;
-      margin-bottom: 12px;
+      margin: 12px auto 0;
+      display: block;
+      width: 92%;
     }
 
     input:focus, textarea:focus {
@@ -146,6 +149,11 @@
       background: #dbeafe;
       color: #1e40af;
       box-shadow: none;
+    }
+
+    .logout-btn {
+      background: #ef4444;
+      box-shadow: 0 8px 18px rgba(239, 68, 68, 0.22);
     }
 
     .row {
@@ -216,10 +224,35 @@
       line-height: 1.4;
     }
 
-    .tabs {
+    .bottom-tabs {
+      position: fixed;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      width: calc(100% - 28px);
+      max-width: 402px;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(147, 197, 253, 0.55);
+      box-shadow: 0 18px 45px rgba(37, 99, 235, 0.22);
+      border-radius: 24px;
+      padding: 10px;
       display: flex;
       gap: 10px;
-      margin-bottom: 15px;
+      z-index: 20;
+    }
+
+    .tab-btn {
+      box-shadow: none;
+      background: #eff6ff;
+      color: #1e40af;
+      border: 1px solid transparent;
+    }
+
+    .tab-btn.active {
+      background: #2563eb;
+      color: white;
+      border-color: #1d4ed8;
+      box-shadow: 0 10px 22px rgba(37, 99, 235, 0.25);
     }
 
     .small-btn {
@@ -229,7 +262,7 @@
       font-size: 14px;
     }
 
-    .hidden { display: none; }
+    .hidden { display: none !important; }
 
     .empty {
       text-align: center;
@@ -268,6 +301,7 @@
         </svg>
       </div>
 
+      <br>
       <h1>Einkaufszettel</h1>
 
       <input id="email" type="email" placeholder="E-Mail" />
@@ -309,19 +343,18 @@
 
     <div id="mainApp" class="hidden">
       <div class="card">
-        <div class="header-row">
-          <div>
-            <div class="logo">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M8 3h8l2 2v16H6V5l2-2z"/>
-                <path d="M9 8h6"/>
-                <path d="M9 12h6"/>
-                <path d="M9 16h4"/>
-                <path d="M16 3v3h3"/>
-              </svg>
-            </div>
-            <h1 id="appTitle">Einkauf</h1>
+        <div class="main-header">
+          <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 3h8l2 2v16H6V5l2-2z"/>
+              <path d="M9 8h6"/>
+              <path d="M9 12h6"/>
+              <path d="M9 16h4"/>
+              <path d="M16 3v3h3"/>
+            </svg>
           </div>
+
+          <div id="appTitle" class="instance-title">Einkauf</div>
 
           <button class="settings-btn" onclick="showSettings()">⚙</button>
         </div>
@@ -335,11 +368,6 @@
       </div>
 
       <div class="card">
-        <div class="tabs">
-          <button onclick="showTab('list')">Liste</button>
-          <button class="secondary" onclick="showTab('bought')">Eingekauft</button>
-        </div>
-
         <div id="listTab">
           <div id="shoppingList"></div>
         </div>
@@ -347,6 +375,11 @@
         <div id="boughtTab" class="hidden">
           <div id="boughtList"></div>
         </div>
+      </div>
+
+      <div class="bottom-tabs">
+        <button id="listTabBtn" class="tab-btn active" onclick="showTab('list')">Liste</button>
+        <button id="boughtTabBtn" class="tab-btn" onclick="showTab('bought')">Eingekauft</button>
       </div>
     </div>
 
@@ -830,8 +863,13 @@
     }
 
     function showTab(tab) {
-      document.getElementById("listTab").classList.toggle("hidden", tab !== "list");
-      document.getElementById("boughtTab").classList.toggle("hidden", tab !== "bought");
+      const isList = tab === "list";
+
+      document.getElementById("listTab").classList.toggle("hidden", !isList);
+      document.getElementById("boughtTab").classList.toggle("hidden", isList);
+
+      document.getElementById("listTabBtn").classList.toggle("active", isList);
+      document.getElementById("boughtTabBtn").classList.toggle("active", !isList);
     }
 
     function formatDate(dateString) {
