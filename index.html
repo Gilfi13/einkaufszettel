@@ -3,23 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>Einkaufszettel</title>
+  <title>Familien App</title>
 
   <link rel="manifest" href="/manifest.json">
-
   <meta name="theme-color" content="#2563eb">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Einkauf">
+  <meta name="apple-mobile-web-app-title" content="Familie">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     body {
       margin: 0;
@@ -65,11 +60,7 @@
       box-shadow: 0 8px 20px rgba(37, 99, 235, 0.08);
     }
 
-    .logo svg {
-      width: 34px;
-      height: 34px;
-      color: #1d4ed8;
-    }
+    .logo svg { width: 34px; height: 34px; color: #1d4ed8; }
 
     .instance-title {
       font-size: 24px;
@@ -80,6 +71,13 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .instance-title:after {
+      content: " ▾";
+      font-size: 15px;
+      color: #64748b;
     }
 
     .settings-btn {
@@ -95,18 +93,8 @@
       flex-shrink: 0;
     }
 
-    h1 {
-      margin: 0 0 18px;
-      font-size: 30px;
-      color: #0f172a;
-      line-height: 1.2;
-    }
-
-    h2 {
-      margin: 0 0 12px;
-      font-size: 21px;
-      color: #0f172a;
-    }
+    h1 { margin: 0 0 18px; font-size: 30px; color: #0f172a; line-height: 1.2; }
+    h2 { margin: 0 0 12px; font-size: 21px; color: #0f172a; }
 
     .muted {
       color: #64748b;
@@ -125,9 +113,7 @@
       font-family: inherit;
     }
 
-    input {
-      margin-bottom: 10px;
-    }
+    input { margin-bottom: 10px; }
 
     textarea {
       height: 52px;
@@ -135,7 +121,6 @@
       resize: none;
       margin-top: 12px;
       margin-bottom: 0;
-      width: 100%;
       display: block;
     }
 
@@ -161,16 +146,6 @@
     button:active {
       transform: scale(0.96);
       box-shadow: 0 4px 10px rgba(37, 99, 235, 0.14);
-    }
-
-    button:focus {
-      outline: none;
-    }
-
-    button:focus-visible {
-      outline: 3px solid rgba(37, 99, 235, 0.18);
-      outline-offset: 3px;
-      border-radius: 17px;
     }
 
     button.secondary {
@@ -202,6 +177,11 @@
       padding: 0;
       font-size: 26px;
       flex-shrink: 0;
+    }
+
+    .green-btn {
+      background: #22c55e;
+      box-shadow: 0 10px 22px rgba(34, 197, 94, 0.18);
     }
 
     .item {
@@ -291,9 +271,7 @@
       font-size: 14px;
     }
 
-    .hidden {
-      display: none !important;
-    }
+    .hidden { display: none !important; }
 
     .empty {
       text-align: center;
@@ -312,8 +290,47 @@
       cursor: pointer;
     }
 
-    .settings-list button {
+    .settings-list button { margin-bottom: 10px; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.28);
+      z-index: 50;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 430px;
+      background: white;
+      border-radius: 30px;
+      padding: 22px;
+      box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+      border: 1px solid #e2e8f0;
+    }
+
+    .menu-btn {
       margin-bottom: 10px;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: 950;
+      margin-bottom: 6px;
+    }
+
+    .date-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
     }
   </style>
 </head>
@@ -333,7 +350,7 @@
       </div>
 
       <br>
-      <h1>Einkaufszettel</h1>
+      <h1>Familien App</h1>
 
       <input id="email" type="email" placeholder="E-Mail" />
       <input id="password" type="password" placeholder="Passwort" />
@@ -345,7 +362,7 @@
 
     <div id="profileBox" class="card hidden">
       <h1>Dein Name</h1>
-      <div class="muted">Dieser Name wird später bei Artikeln angezeigt.</div>
+      <div class="muted">Dieser Name wird später angezeigt.</div>
       <input id="nicknameInput" placeholder="z.B. Dominik" />
       <button onclick="saveNickname()">Speichern</button>
     </div>
@@ -385,32 +402,78 @@
             </svg>
           </div>
 
-          <div id="appTitle" class="instance-title">Einkauf</div>
+          <div id="appTitle" class="instance-title" onclick="openAppMenu()">Familie</div>
 
           <button class="settings-btn" onclick="showSettings()">⚙</button>
         </div>
 
-        <div class="row">
-          <input id="newItem" class="add-input" placeholder="Artikel eingeben" />
-          <button onclick="addItem()" class="add-btn">+</button>
+        <div id="shoppingInputBox">
+          <div class="page-title">Einkaufszettel</div>
+          <div class="muted">Alles, was noch besorgt werden muss.</div>
+          <div class="row">
+            <input id="newItem" class="add-input" placeholder="Artikel eingeben" />
+            <button onclick="addItem()" class="add-btn">+</button>
+          </div>
+          <textarea id="newComment" placeholder="Kommentar hinzufügen"></textarea>
         </div>
 
-        <textarea id="newComment" placeholder="Kommentar hinzufügen"></textarea>
+        <div id="recipesInputBox" class="hidden">
+          <div class="page-title">Rezepte</div>
+          <div class="muted">Essen eintragen, auf das ihr mal wieder Lust habt.</div>
+          <div class="row">
+            <input id="newRecipe" class="add-input" placeholder="z.B. Lasagne, Raclette, Burger" />
+            <button onclick="addRecipe()" class="add-btn">+</button>
+          </div>
+        </div>
+
+        <div id="calendarInputBox" class="hidden">
+          <div class="page-title">Termine</div>
+          <div class="muted">Familientermine einfach eintragen.</div>
+          <input id="newEventTitle" placeholder="z.B. Holz holen, Urlaub, Geburtstag" />
+          <div class="date-row">
+            <input id="newEventStart" type="date" />
+            <input id="newEventEnd" type="date" />
+          </div>
+          <textarea id="newEventComment" placeholder="Notiz, z.B. Samstag, 9–16.8, Treffpunkt usw."></textarea>
+          <br><br>
+          <button onclick="addEvent()">Termin speichern</button>
+        </div>
       </div>
 
       <div class="card">
-        <div id="listTab">
-          <div id="shoppingList"></div>
+        <div id="shoppingPage">
+          <div id="listTab">
+            <div id="shoppingList"></div>
+          </div>
+
+          <div id="boughtTab" class="hidden">
+            <div id="boughtList"></div>
+          </div>
         </div>
 
-        <div id="boughtTab" class="hidden">
-          <div id="boughtList"></div>
+        <div id="recipesPage" class="hidden">
+          <div id="recipesList"></div>
+        </div>
+
+        <div id="calendarPage" class="hidden">
+          <div id="eventsList"></div>
         </div>
       </div>
 
-      <div class="bottom-tabs">
+      <div id="shoppingBottomTabs" class="bottom-tabs">
         <button id="listTabBtn" class="tab-btn active" onclick="showTab('list')">Liste</button>
         <button id="boughtTabBtn" class="tab-btn" onclick="showTab('bought')">Eingekauft</button>
+      </div>
+    </div>
+
+    <div id="appMenu" class="modal-backdrop hidden" onclick="closeAppMenu(event)">
+      <div class="modal">
+        <h2>Bereich wählen</h2>
+        <div class="muted">Was möchtest du öffnen?</div>
+        <button class="menu-btn" onclick="switchPage('shopping')">Einkaufszettel <span>›</span></button>
+        <button class="menu-btn" onclick="switchPage('recipes')">Rezepte <span>›</span></button>
+        <button class="menu-btn" onclick="switchPage('calendar')">Termine <span>›</span></button>
+        <button class="secondary" onclick="hideAppMenu()">Abbrechen</button>
       </div>
     </div>
 
@@ -446,6 +509,7 @@
     let currentProfile = null;
     let currentInstanceId = localStorage.getItem("currentInstanceId");
     let currentInstanceName = localStorage.getItem("currentInstanceName");
+    let currentPage = localStorage.getItem("currentPage") || "shopping";
 
     async function init() {
       const { data } = await supabaseClient.auth.getSession();
@@ -472,12 +536,10 @@
       showMainApp();
 
       supabaseClient
-        .channel("shopping_items_changes")
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "shopping_items" },
-          () => loadItems()
-        )
+        .channel("family_app_changes")
+        .on("postgres_changes", { event: "*", schema: "public", table: "shopping_items" }, () => loadItems())
+        .on("postgres_changes", { event: "*", schema: "public", table: "family_recipes" }, () => loadRecipes())
+        .on("postgres_changes", { event: "*", schema: "public", table: "family_events" }, () => loadEvents())
         .subscribe();
 
       setInterval(moveOldCheckedItems, 60000);
@@ -536,6 +598,7 @@
     async function logout() {
       localStorage.removeItem("currentInstanceId");
       localStorage.removeItem("currentInstanceName");
+      localStorage.removeItem("currentPage");
       await supabaseClient.auth.signOut();
       location.reload();
     }
@@ -596,7 +659,7 @@
 
     function showSettings() {
       document.getElementById("settingsInfo").textContent =
-        `Angemeldet als ${currentProfile?.nickname || "Unbekannt"} · Liste: ${currentInstanceName || "Keine"}`;
+        `Angemeldet als ${currentProfile?.nickname || "Unbekannt"} · Familie: ${currentInstanceName || "Keine"}`;
       showOnly("settingsBox");
     }
 
@@ -723,9 +786,42 @@
     }
 
     function showMainApp() {
-      document.getElementById("appTitle").textContent = currentInstanceName || "Einkauf";
+      document.getElementById("appTitle").textContent = currentInstanceName || "Familie";
       showOnly("mainApp");
-      loadItems();
+      switchPage(currentPage, true);
+    }
+
+    function openAppMenu() {
+      document.getElementById("appMenu").classList.remove("hidden");
+    }
+
+    function hideAppMenu() {
+      document.getElementById("appMenu").classList.add("hidden");
+    }
+
+    function closeAppMenu(event) {
+      if (event.target.id === "appMenu") hideAppMenu();
+    }
+
+    function switchPage(page, skipMenuClose = false) {
+      currentPage = page;
+      localStorage.setItem("currentPage", page);
+
+      document.getElementById("shoppingInputBox").classList.toggle("hidden", page !== "shopping");
+      document.getElementById("recipesInputBox").classList.toggle("hidden", page !== "recipes");
+      document.getElementById("calendarInputBox").classList.toggle("hidden", page !== "calendar");
+
+      document.getElementById("shoppingPage").classList.toggle("hidden", page !== "shopping");
+      document.getElementById("recipesPage").classList.toggle("hidden", page !== "recipes");
+      document.getElementById("calendarPage").classList.toggle("hidden", page !== "calendar");
+
+      document.getElementById("shoppingBottomTabs").classList.toggle("hidden", page !== "shopping");
+
+      if (page === "shopping") loadItems();
+      if (page === "recipes") loadRecipes();
+      if (page === "calendar") loadEvents();
+
+      if (!skipMenuClose) hideAppMenu();
     }
 
     async function addItem() {
@@ -796,7 +892,7 @@
         .eq("status", "checked")
         .lt("checked_at", limit);
 
-      loadItems();
+      if (currentPage === "shopping") loadItems();
     }
 
     async function loadItems() {
@@ -901,6 +997,234 @@
 
       document.getElementById("listTabBtn").classList.toggle("active", isList);
       document.getElementById("boughtTabBtn").classList.toggle("active", !isList);
+    }
+
+    async function addRecipe() {
+      const input = document.getElementById("newRecipe");
+      const name = input.value.trim();
+
+      if (!name) return;
+
+      const { error } = await supabaseClient.from("family_recipes").insert({
+        instance_id: currentInstanceId,
+        name,
+        last_eaten_at: null,
+        added_by: currentUser.id,
+        added_by_nickname: currentProfile.nickname
+      });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      input.value = "";
+      loadRecipes();
+    }
+
+    async function markRecipeEaten(id) {
+      const { error } = await supabaseClient
+        .from("family_recipes")
+        .update({ last_eaten_at: new Date().toISOString() })
+        .eq("id", id);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      loadRecipes();
+    }
+
+    async function deleteRecipe(id) {
+      if (!confirm("Rezept wirklich löschen?")) return;
+
+      const { error } = await supabaseClient
+        .from("family_recipes")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      loadRecipes();
+    }
+
+    async function loadRecipes() {
+      if (!currentInstanceId) return;
+
+      const { data, error } = await supabaseClient
+        .from("family_recipes")
+        .select("*")
+        .eq("instance_id", currentInstanceId)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        document.getElementById("recipesList").innerHTML = `<div class="empty">${error.message}</div>`;
+        return;
+      }
+
+      const sorted = [...data].sort((a, b) => {
+        if (!a.last_eaten_at && b.last_eaten_at) return -1;
+        if (a.last_eaten_at && !b.last_eaten_at) return 1;
+        if (!a.last_eaten_at && !b.last_eaten_at) return new Date(b.created_at) - new Date(a.created_at);
+        return new Date(a.last_eaten_at) - new Date(b.last_eaten_at);
+      });
+
+      renderRecipes(sorted);
+    }
+
+    function renderRecipes(items) {
+      const box = document.getElementById("recipesList");
+      box.innerHTML = "";
+
+      if (!items || items.length === 0) {
+        box.innerHTML = `<div class="empty">Noch keine Rezepte eingetragen</div>`;
+        return;
+      }
+
+      items.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "item";
+
+        div.innerHTML = `
+          <div class="item-main">
+            <div>
+              <div class="item-title">${escapeHtml(item.name)}</div>
+              <div class="item-meta">
+                ${item.last_eaten_at ? `zuletzt gegessen: ${formatDate(item.last_eaten_at)}` : "noch nicht gegessen"}
+                <br>eingetragen von ${escapeHtml(item.added_by_nickname || "Unbekannt")}
+              </div>
+            </div>
+            <button class="small-btn green-btn" onclick="markRecipeEaten('${item.id}')">✓</button>
+          </div>
+          <div class="comment" onclick="deleteRecipe('${item.id}')">Tippen zum Löschen</div>
+        `;
+
+        box.appendChild(div);
+      });
+    }
+
+    async function addEvent() {
+      const titleInput = document.getElementById("newEventTitle");
+      const startInput = document.getElementById("newEventStart");
+      const endInput = document.getElementById("newEventEnd");
+      const commentInput = document.getElementById("newEventComment");
+
+      const title = titleInput.value.trim();
+      const startDate = startInput.value || null;
+      const endDate = endInput.value || null;
+      const comment = commentInput.value.trim();
+
+      if (!title) {
+        alert("Bitte Termin eingeben.");
+        return;
+      }
+
+      const { error } = await supabaseClient.from("family_events").insert({
+        instance_id: currentInstanceId,
+        title,
+        start_date: startDate,
+        end_date: endDate,
+        comment: comment || null,
+        added_by: currentUser.id,
+        added_by_nickname: currentProfile.nickname
+      });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      titleInput.value = "";
+      startInput.value = "";
+      endInput.value = "";
+      commentInput.value = "";
+
+      loadEvents();
+    }
+
+    async function deleteEvent(id) {
+      if (!confirm("Termin wirklich löschen?")) return;
+
+      const { error } = await supabaseClient
+        .from("family_events")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      loadEvents();
+    }
+
+    async function loadEvents() {
+      if (!currentInstanceId) return;
+
+      const { data, error } = await supabaseClient
+        .from("family_events")
+        .select("*")
+        .eq("instance_id", currentInstanceId)
+        .order("start_date", { ascending: true })
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        document.getElementById("eventsList").innerHTML = `<div class="empty">${error.message}</div>`;
+        return;
+      }
+
+      renderEvents(data);
+    }
+
+    function renderEvents(items) {
+      const box = document.getElementById("eventsList");
+      box.innerHTML = "";
+
+      if (!items || items.length === 0) {
+        box.innerHTML = `<div class="empty">Noch keine Termine</div>`;
+        return;
+      }
+
+      items.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "item";
+
+        div.innerHTML = `
+          <div class="item-main">
+            <div>
+              <div class="item-title">${escapeHtml(item.title)}</div>
+              <div class="item-meta">
+                ${formatEventDate(item.start_date, item.end_date)}
+                <br>eingetragen von ${escapeHtml(item.added_by_nickname || "Unbekannt")}
+              </div>
+            </div>
+            <button class="secondary small-btn" onclick="deleteEvent('${item.id}')">Löschen</button>
+          </div>
+          ${item.comment ? `<div class="comment">${escapeHtml(item.comment)}</div>` : ""}
+        `;
+
+        box.appendChild(div);
+      });
+    }
+
+    function formatEventDate(start, end) {
+      if (!start && !end) return "kein Datum";
+      if (start && !end) return formatOnlyDate(start);
+      if (start && end && start === end) return formatOnlyDate(start);
+      return `${formatOnlyDate(start)} – ${formatOnlyDate(end)}`;
+    }
+
+    function formatOnlyDate(dateString) {
+      if (!dateString) return "";
+      return new Date(dateString + "T00:00:00").toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit"
+      });
     }
 
     function formatDate(dateString) {
