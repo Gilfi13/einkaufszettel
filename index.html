@@ -280,6 +280,27 @@
 
     .settings-list button { margin-bottom: 10px; }
 
+    .siri-steps { padding-left: 20px; line-height: 1.5; }
+    .siri-steps li { margin-bottom: 14px; }
+
+    code {
+      background: #eef2ff;
+      border-radius: 6px;
+      padding: 1px 5px;
+      font-size: 13px;
+      word-break: break-all;
+    }
+
+    .copy-field {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 6px;
+    }
+
+    .copy-field code { flex: 1; padding: 8px; }
+    .copy-field .small-btn { width: auto; padding: 10px 12px; flex-shrink: 0; }
+
     .page-title {
       font-size: 28px;
       font-weight: 950;
@@ -400,9 +421,43 @@
       <div class="settings-list">
         <button class="secondary" onclick="backToApp()">Zurück</button>
         <button onclick="showNicknameEdit()">Nickname ändern</button>
+        <button onclick="showSiriSetup()">Mit Siri verbinden</button>
         <button onclick="leaveInstanceView()">Liste wechseln</button>
         <button class="logout-btn" onclick="logout()">Abmelden</button>
       </div>
+    </div>
+
+    <div id="siriBox" class="card hidden">
+      <h1>Mit Siri verbinden</h1>
+      <div class="muted">Danach reicht: „Hey Siri, Einkaufsliste“ – Siri fragt, was drauf soll, z.B. „Milch, Eier und Brot“.</div>
+
+      <div id="siriError" class="empty hidden"></div>
+
+      <div id="siriContent" class="hidden">
+        <ol class="siri-steps">
+          <li>App <b>Kurzbefehle</b> öffnen → <b>+</b> (neuer Kurzbefehl).</li>
+          <li>Aktion <b>Nach Eingabe fragen</b> hinzufügen, Frage: „Was soll auf die Liste?“</li>
+          <li>Aktion <b>Inhalte von URL abrufen</b> hinzufügen und als URL einfügen:
+            <div class="copy-field"><code id="siriUrl"></code><button class="small-btn" onclick="copySiri('siriUrl')">Kopieren</button></div>
+          </li>
+          <li>Dort auf <b>›</b> tippen: Methode <b>POST</b>.<br>
+            Unter <b>Header</b> hinzufügen: Schlüssel <code>apikey</code>, Wert:
+            <div class="copy-field"><code id="siriKey"></code><button class="small-btn" onclick="copySiri('siriKey')">Kopieren</button></div>
+          </li>
+          <li>Unter <b>Hauptteil anfordern</b> „JSON“ wählen und zwei Textfelder hinzufügen:<br>
+            <code>p_token</code> mit deinem Schlüssel:
+            <div class="copy-field"><code id="siriToken"></code><button class="small-btn" onclick="copySiri('siriToken')">Kopieren</button></div>
+            <code>p_text</code> → Variable <b>Bereitgestellte Eingabe</b> auswählen.
+          </li>
+          <li>Aktion <b>Text sprechen</b> hinzufügen (spricht automatisch „Inhalte der URL“).</li>
+          <li>Kurzbefehl oben <b>Einkaufsliste</b> nennen – fertig.</li>
+        </ol>
+        <div class="muted">Der Schlüssel gehört nur dir und dieser Liste. Nicht weitergeben.</div>
+        <button class="secondary" onclick="resetSiriToken()">Neuen Schlüssel erzeugen</button>
+        <br><br>
+      </div>
+
+      <button class="secondary" onclick="showSettings()">Zurück</button>
     </div>
 
     <div id="nicknameEditBox" class="card hidden">
@@ -521,7 +576,7 @@
     }
 
     function showOnly(id) {
-      ["loadingBox", "authBox", "profileBox", "instanceBox", "mainApp", "settingsBox", "nicknameEditBox"].forEach(box => {
+      ["loadingBox", "authBox", "profileBox", "instanceBox", "mainApp", "settingsBox", "nicknameEditBox", "siriBox"].forEach(box => {
         document.getElementById(box).classList.add("hidden");
       });
       document.getElementById(id).classList.remove("hidden");
@@ -647,6 +702,57 @@
     function showNicknameEdit() {
       document.getElementById("nicknameEditInput").value = currentProfile?.nickname || "";
       showOnly("nicknameEditBox");
+    }
+
+    async function showSiriSetup() {
+      showOnly("siriBox");
+      document.getElementById("siriContent").classList.add("hidden");
+      const errorBox = document.getElementById("siriError");
+      errorBox.classList.add("hidden");
+
+      const { data, error } = await supabaseClient.rpc("get_shortcut_token", {
+        p_instance_id: String(currentInstanceId)
+      });
+
+      if (error) {
+        errorBox.textContent = "Siri ist noch nicht eingerichtet (Datenbank-Skript fehlt). " + error.message;
+        errorBox.classList.remove("hidden");
+        return;
+      }
+
+      fillSiriSetup(data);
+    }
+
+    function fillSiriSetup(token) {
+      document.getElementById("siriUrl").textContent = `${SUPABASE_URL}/rest/v1/rpc/add_item_via_shortcut`;
+      document.getElementById("siriKey").textContent = SUPABASE_ANON_KEY;
+      document.getElementById("siriToken").textContent = token;
+      document.getElementById("siriContent").classList.remove("hidden");
+    }
+
+    async function resetSiriToken() {
+      if (!confirm("Neuen Schlüssel erzeugen? Der alte Kurzbefehl funktioniert dann nicht mehr.")) return;
+
+      const { data, error } = await supabaseClient.rpc("reset_shortcut_token", {
+        p_instance_id: String(currentInstanceId)
+      });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      fillSiriSetup(data);
+    }
+
+    async function copySiri(id) {
+      const text = document.getElementById(id).textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        alert("Kopiert");
+      } catch {
+        prompt("Zum Kopieren:", text);
+      }
     }
 
     async function updateNicknameFromSettings() {
